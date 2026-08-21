@@ -11,8 +11,21 @@
 Пример запуска скрипта в Linux:
 
 ```bash
-sudo chmod +x ralph.sh # сделать скрипт исполняемым
-./ralph.sh tasks.txt   # запустить скрипт
+sudo chmod +x ralph.sh         # сделать скрипт исполняемым
+
+# запустить скрипт
+./ralph.sh tasks.txt
+# или
+make
+# или
+make run
+
+# запустить скрипт в многословном режиме (показывать в консоли вывод команды opencode)
+./ralph.sh --verbose tasks.txt
+# или
+./ralph.sh -v tasks.txt
+# или
+make run_verbose
 ```
 
 Пример `tasks.txt`:
