@@ -1,9 +1,27 @@
 #!/bin/bash
 
+# Инициализируем переменную для режима подробного вывода
+VERBOSE=false
+
+# Разбираем флаги перед основным аргументом
+while [[ "$1" =~ ^- ]]; do
+  case "$1" in
+  -v | --verbose)
+    VERBOSE=true
+    shift
+    ;;
+  *)
+    echo "Ошибка: неизвестный флаг $1"
+    echo "Использование: $0 [-v|--verbose] <путь_к_файлу.txt>"
+    exit 1
+    ;;
+  esac
+done
+
 # Проверяем, передан ли аргумент с файлом
 if [ -z "$1" ]; then
   echo "Ошибка: Не указан файл с задачами!"
-  echo "Использование: $0 <путь_к_файлу.txt>"
+  echo "Использование: $0 [-v|--verbose] <путь_к_файлу.txt>"
   exit 1
 fi
 
@@ -44,7 +62,10 @@ while [ -s "$TASK_FILE" ]; do
   echo "------------------------------------------------------"
   echo "Запуск задачи: $PROMPT"
   echo "------------------------------------------------------"
-  echo -e "\nВывод команды opencode:"
+
+  if [ "$VERBOSE" = true ]; then
+    echo -e "\nВывод команды opencode:"
+  fi
 
   # Временный файл для перехвата вывода команды opencode
   TMP_OUTPUT=$(mktemp)
@@ -52,8 +73,16 @@ while [ -s "$TASK_FILE" ]; do
   # Получаем время начала выполнения задачи в секундах (Unix Epoch)
   sec1=$(date +%s)
 
-  # Запускаем opencode, дублируя вывод в терминал и во временный файл
-  opencode run "$PROMPT" </dev/null 2>&1 | tee "$TMP_OUTPUT"
+  # Запускаем opencode в зависимости от флага VERBOSE
+  if [ "$VERBOSE" = true ]; then
+    # Дублируем вывод в терминал и во временный файл
+    opencode run "$PROMPT" </dev/null 2>&1 | tee "$TMP_OUTPUT"
+    STATUS=${PIPESTATUS[0]}
+  else
+    # Перенаправляем вывод только во временный файл (скрываем из консоли)
+    opencode run "$PROMPT" </dev/null >"$TMP_OUTPUT" 2>&1
+    STATUS=$?
+  fi
 
   # Получаем время окончания выполнения задачи в секундах (Unix Epoch)
   sec2=$(date +%s)
@@ -65,9 +94,6 @@ while [ -s "$TASK_FILE" ]; do
   hours=$((diff / 3600))
   minutes=$(((diff % 3600) / 60))
   seconds=$((diff % 60))
-
-  # Сохраняем код завершения команды
-  STATUS=${PIPESTATUS[0]}
 
   # Записываем результат выполнения в лог-файл
   {
@@ -82,7 +108,7 @@ while [ -s "$TASK_FILE" ]; do
 
   # Проверяем успешность выполнения
   if [ $STATUS -ne 0 ]; then
-    echo -e "[ОШИБКА] Команда opencode завершилась неудачно со статусом $STATUS!" | tee -a "$LOG_FILE"
+    echo -e "\n[ОШИБКА] Команда opencode завершилась неудачно со статусом $STATUS!" | tee -a "$LOG_FILE"
     echo "Выполнение скрипта прервано. Файл задач остановлен на текущей строке." | tee -a "$LOG_FILE"
     rm -f "$TMP_OUTPUT"
     exit $STATUS
