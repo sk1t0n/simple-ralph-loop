@@ -1,7 +1,8 @@
 #!/bin/bash
 
-# Инициализируем переменную для режима подробного вывода
+# Инициализируем переменные по умолчанию
 VERBOSE=false
+AGENT="opencode"
 
 # Разбираем флаги перед основным аргументом
 while [[ "$1" =~ ^- ]]; do
@@ -10,9 +11,23 @@ while [[ "$1" =~ ^- ]]; do
     VERBOSE=true
     shift
     ;;
+  --agent)
+    # Проверяем, передано ли значение для флага
+    if [[ -z "$2" || "$2" =~ ^- ]]; then
+      echo "Ошибка: флаг --agent требует указания значения (opencode или omp)"
+      exit 1
+    fi
+    AGENT="$2"
+    # Проверяем корректность значения агента
+    if [[ "$AGENT" != "opencode" && "$AGENT" != "omp" ]]; then
+      echo "Ошибка: неверное значение для --agent: '$AGENT'. Допустимы только 'opencode' или 'omp'."
+      exit 1
+    fi
+    shift 2
+    ;;
   *)
     echo "Ошибка: неизвестный флаг $1"
-    echo "Использование: $0 [-v|--verbose] <путь_к_файлу.txt>"
+    echo "Использование: $0 [-v|--verbose] [--agent opencode|omp] <путь_к_файлу.txt>"
     exit 1
     ;;
   esac
@@ -21,7 +36,7 @@ done
 # Проверяем, передан ли аргумент с файлом
 if [ -z "$1" ]; then
   echo "Ошибка: Не указан файл с задачами!"
-  echo "Использование: $0 [-v|--verbose] <путь_к_файлу.txt>"
+  echo "Использование: $0 [-v|--verbose] [--agent opencode|omp] <путь_к_файлу.txt>"
   exit 1
 fi
 
@@ -39,11 +54,13 @@ TOTAL_START=$(date +%s)
 
 # Очищаем или создаем файл лога перед началом работы
 echo "=== Старт выполнения задач $(date) ===" >"$LOG_FILE"
+echo "Используемый агент: $AGENT" >>"$LOG_FILE"
 echo "Количество задач: $(wc -l "$TASK_FILE" | awk '{print $1}')" >>"$LOG_FILE"
 echo "==========================================================" >>"$LOG_FILE"
 echo >>"$LOG_FILE"
 
 echo "======================================================"
+echo "Используемый агент: $AGENT"
 echo "Количество задач: $(wc -l "$TASK_FILE" | awk '{print $1}')"
 echo -e "======================================================\n"
 
@@ -64,23 +81,30 @@ while [ -s "$TASK_FILE" ]; do
   echo "------------------------------------------------------"
 
   if [ "$VERBOSE" = true ]; then
-    echo -e "\nВывод команды opencode:"
+    echo -e "\nВывод команды $AGENT:"
   fi
 
-  # Временный файл для перехвата вывода команды opencode
+  # Временный файл для перехвата вывода команды агента
   TMP_OUTPUT=$(mktemp)
+
+  # Формируем команду
+  if [ "$AGENT" = "opencode" ]; then
+    CMD=(opencode run "$PROMPT")
+  elif [ "$AGENT" = "omp" ]; then
+    CMD=(omp --print "$PROMPT")
+  fi
 
   # Получаем время начала выполнения задачи в секундах (Unix Epoch)
   sec1=$(date +%s)
 
-  # Запускаем opencode в зависимости от флага VERBOSE
+  # Запускаем команду в зависимости от флага VERBOSE
   if [ "$VERBOSE" = true ]; then
     # Дублируем вывод в терминал и во временный файл
-    opencode run "$PROMPT" </dev/null 2>&1 | tee "$TMP_OUTPUT"
-    STATUS=${PIPESTATUS[0]}
+    "${CMD[@]}" </dev/null 2>&1 | tee "$TMP_OUTPUT"
+    STATUS=${PIPESTATUS}
   else
     # Перенаправляем вывод только во временный файл (скрываем из консоли)
-    opencode run "$PROMPT" </dev/null >"$TMP_OUTPUT" 2>&1
+    "${CMD[@]}" </dev/null >"$TMP_OUTPUT" 2>&1
     STATUS=$?
   fi
 
@@ -101,14 +125,14 @@ while [ -s "$TASK_FILE" ]; do
     echo "Задача: $PROMPT"
     echo "----------------------------------------------------------"
     echo
-    echo "Вывод команды opencode:"
+    echo "Вывод команды $AGENT:"
     cat "$TMP_OUTPUT"
     echo
   } >>"$LOG_FILE"
 
   # Проверяем успешность выполнения
   if [ $STATUS -ne 0 ]; then
-    echo -e "\n[ОШИБКА] Команда opencode завершилась неудачно со статусом $STATUS!" | tee -a "$LOG_FILE"
+    echo -e "\n[ОШИБКА] Команда $AGENT завершилась неудачно со статусом $STATUS!" | tee -a "$LOG_FILE"
     echo "Выполнение скрипта прервано. Файл задач остановлен на текущей строке." | tee -a "$LOG_FILE"
     rm -f "$TMP_OUTPUT"
     exit $STATUS
