@@ -5,11 +5,11 @@
 ## Требования
 
 1. **Git**. Установка:
-  - `sudo apt install git` - Linux (Debian/Ubuntu)
-  - `pkg update && pkg upgrade -y && pkg install git -y` - Termux
+    - `sudo apt install git` - Linux (Debian/Ubuntu)
+    - `pkg update && pkg upgrade -y && pkg install git -y` - Termux
 2. **AI-агент** (в Android устанавливать через [Core-Termux](https://devcorex-web.vercel.app/core-termux)). Поддерживаются следующие AI-агенты:
-  - [OpenCode](https://opencode.ai/) - используется по умолчанию
-  - [Oh My Pi (OMP)](https://omp.sh/) - задаётся через опцию `--agent omp`
+    - [OpenCode](https://opencode.ai/) - используется по умолчанию
+    - [Oh My Pi (OMP)](https://omp.sh/) - задаётся через опцию `--agent omp`
 
 ## Использование
 
