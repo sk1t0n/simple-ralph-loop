@@ -61,6 +61,8 @@ TOTAL_START=$(date +%s)
 echo "======== Начало: $(date) ========" >"$LOG_FILE"
 echo "AI-агент: $AGENT" >>"$LOG_FILE"
 echo "Количество задач: $TOTAL_TASKS" >>"$LOG_FILE"
+echo "Задачи:" >>"$LOG_FILE"
+cat "$TASK_FILE" >>"$LOG_FILE"
 echo "======================================================" >>"$LOG_FILE"
 echo >>"$LOG_FILE"
 
