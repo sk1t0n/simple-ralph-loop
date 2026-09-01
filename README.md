@@ -4,9 +4,9 @@
 
 ## Требования
 
-1. **Git**. Установка:
+1. **Git (необязательно, т.к. можно скачать скрипт вручную по [этой](https://raw.githubusercontent.com/sk1t0n/simple-ralph-loop/refs/heads/main/ralph.sh) ссылке)**. Установка:
     - `sudo apt install git` - Linux (Debian/Ubuntu)
-    - `pkg update && pkg upgrade -y && pkg install git -y` - Termux
+    - `pkg update && pkg upgrade -y && pkg install git` - Termux
 2. **AI-агент** (в Android устанавливать через [Core-Termux](https://devcorex-web.vercel.app/core-termux)). Поддерживаются следующие AI-агенты:
     - [OpenCode](https://opencode.ai/) - используется по умолчанию
     - [Oh My Pi (OMP)](https://omp.sh/) - задаётся через опцию `--agent omp`
@@ -17,7 +17,7 @@
 
 ```bash
 # клонировать репозиторий и перейти в него
-git clone https://github.com/sk1t0n/simple-ralph-loop.git
+git clone --depth=1 https://github.com/sk1t0n/simple-ralph-loop.git
 cd simple-ralph-loop
 
 # сделать скрипт исполняемым в Linux
@@ -47,8 +47,8 @@ make run_verbose
 
 ```txt
 Напиши черновик делового письма.
-Исправь ошибки и улучши стиль следующего текста: <TEXT>.
-Сделай краткую выжимку (самари) для следующей статьи: <URL>.
+Исправь ошибки и улучши стиль следующего текста: <ТЕКСТ В ОДНУ СТРОКУ>.
+Сделай краткую выжимку (самари) для следующей статьи: <ССЫЛКА>.
 ```
 
 Прогресс выполнения задач можно посмотреть в файле `progress.txt` c помощью команды `cat progress.txt`.
